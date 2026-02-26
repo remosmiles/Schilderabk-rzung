@@ -3,102 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVZ Profi-Check | Kennzeichen & ADR</title>
+    <title>SVZ Profi-Check | ADR & Kennzeichen</title>
     <style>
         :root { --primary: #2c3e50; --accent: #e67e22; --bg: #f4f7f6; --danger: #c0392b; --success: #27ae60; --blue: #2980b9; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 10px; }
         .container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 100%; max-width: 650px; }
         h1 { color: var(--primary); text-align: center; font-size: 1.3rem; border-bottom: 3px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; }
         .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
-        h2 { font-size: 0.9rem; color: #7f8c8d; margin-top: 0; text-transform: uppercase; }
+        h2 { font-size: 0.9rem; color: #7f8c8d; margin-top: 0; text-transform: uppercase; margin-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         input, select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        .display { margin-top: 10px; padding: 15px; border-radius: 8px; text-align: center; min-height: 50px; background: #f9f9f9; }
-        
-        /* Punkte-Rechner */
+        .display { margin-top: 10px; padding: 15px; border-radius: 8px; text-align: center; min-height: 40px; background: #f9f9f9; border: 1px solid #eee; }
         .points-box { background: var(--primary); color: white; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: center; }
         .status-pill { display: inline-block; padding: 8px 15px; border-radius: 50px; font-weight: bold; margin-top: 10px; font-size: 1.1rem; }
         .forbidden { background: #fdeaea; color: var(--danger); border: 2px solid var(--danger); }
         .allowed { background: #eafaf1; color: var(--success); border: 2px solid var(--success); }
-        .points-val { font-size: 2rem; font-weight: bold; display: block; }
+        .legend { font-size: 0.75rem; color: #666; margin-top: 10px; line-height: 1.4; padding: 8px; background: #fffbe6; border-radius: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🚛 SVZ Kontroll-Terminal</h1>
+    <h1>🚛 SVZ Kontroll-Terminal 2.0</h1>
 
     <div class="section">
         <h2>🌍 Kennzeichen-Suche</h2>
-        <input type="text" id="plateInput" list="countryList" placeholder="Land oder Kürzel (z.B. CH oder Polen)..." oninput="checkPlate()">
-        <datalist id="countryList"></datalist>
+        <input type="text" id="plateInput" placeholder="Land oder Kürzel (z.B. CH, PL, D)..." oninput="checkPlate()">
         <div class="display">
             <strong id="plateResult" style="font-size: 1.5rem;">--</strong> <span id="plateName"></span>
         </div>
     </div>
 
     <div class="section">
-        <h2>🔥 ADR Gefahrgut-Info</h2>
+        <h2>🔥 ADR Gefahrgut-Check</h2>
         <div class="grid">
-            <input type="number" id="unInput" placeholder="UN-Nr (4 Stellen)" oninput="calcAll()">
-            <input type="number" id="dangerNr" placeholder="Gefahrenzahl (oben)" oninput="calcAll()">
+            <div>
+                <label style="font-size: 0.75rem;">Gefahrenzahl (Oben)</label>
+                <input type="text" id="dangerNr" placeholder="z.B. 33 oder X338" oninput="calcAll()">
+            </div>
+            <div>
+                <label style="font-size: 0.75rem;">UN-Nummer (Unten)</label>
+                <input type="number" id="unInput" placeholder="z.B. 1202" oninput="calcAll()">
+            </div>
         </div>
         <div id="unInfoBox" class="display" style="font-weight: bold; color: var(--blue);">Stoff eingeben...</div>
+        
+        <div class="legend">
+            <strong>Gefahren-Zahlen:</strong> 2: Gas | 3: Brennbar | 4: Fest-Brennbar | 5: Oxidierend | 6: Giftig | 8: Ätzend | 9: Gefahr Reaktion | <strong>X: Reagiert mit Wasser!</strong>
+        </div>
     </div>
 
     <div class="section" style="border-left: 5px solid var(--accent);">
-        <h2>⚖️ 1000-Punkte-Rechner (ADR 1.1.3.6)</h2>
+        <h2>⚖️ 1000-Punkte-Rechner (Gotthard Check)</h2>
         <div class="grid">
             <div>
-                <label style="font-size: 0.8rem;">Beförderungskat.</label>
+                <label style="font-size: 0.75rem;">Beförderungskat.</label>
                 <select id="befKat" onchange="calcAll()">
                     <option value="50">Kat. 1 (Faktor 50)</option>
                     <option value="3">Kat. 2 (Faktor 3)</option>
                     <option value="1" selected>Kat. 3 (Faktor 1)</option>
-                    <option value="0">Kat. 4 (Faktor 0 - unbegrenzt)</option>
+                    <option value="0">Kat. 4 (Faktor 0)</option>
                 </select>
             </div>
             <div>
-                <label style="font-size: 0.8rem;">Menge (kg / Liter)</label>
-                <input type="number" id="quantity" placeholder="Menge" oninput="calcAll()">
+                <label style="font-size: 0.75rem;">Menge (kg / L)</label>
+                <input type="number" id="quantity" placeholder="Menge eingeben" oninput="calcAll()">
             </div>
         </div>
 
         <div class="points-box">
-            <span>Gesamt-Punkte:</span>
-            <span class="points-val" id="totalPoints">0</span>
-            <div id="tunnelStatus" class="status-pill allowed">FREIE FAHRT (Tunnel E)</div>
+            <span>Punkte: <strong id="totalPoints" style="font-size: 1.8rem;">0</strong> / 1000</span>
+            <div id="tunnelStatus" class="status-pill allowed">BEREIT FÜR EINGABE</div>
         </div>
     </div>
-
-    <p style="font-size: 0.7rem; color: #999; text-align: center;">
-        * Tunnel Kat. E (Gotthard): Kennzeichnungspflichtige Transporte verboten.<br>
-        * Unter 1000 Punkten: Keine orangefarbene Tafel nötig = ERLAUBT.
-    </p>
 </div>
 
 <script>
     const countries = {
         "Deutschland": "D", "Österreich": "A", "Schweiz": "CH", "Italien": "I", "Frankreich": "F",
         "Spanien": "E", "Polen": "PL", "Tschechien": "CZ", "Niederlande": "NL", "Belgien": "B",
-        "Ungarn": "H", "Rumänien": "RO", "Slowakei": "SK", "Türkei": "TR", "Ukraine": "UA"
+        "Ungarn": "H", "Rumänien": "RO", "Slowakei": "SK", "Türkei": "TR", "Ukraine": "UA",
+        "Bulgarien": "BG", "Kroatien": "HR", "Serbien": "SRB", "Slowenien": "SLO", "Litauen": "LT"
     };
 
-    const unData = {
-        "1202": "DIESELKRAFTSTOFF / HEIZÖL",
-        "1203": "BENZIN",
-        "1965": "FLÜSSIGGAS",
-        "1263": "FARBE / LACK",
-        "3082": "Umweltgefährdend (flüssig)",
-        "3077": "Umweltgefährdend (fest)"
+    const unDatabase = {
+        // Treibstoffe & Gase
+        "1202": "DIESEL / HEIZÖL (Kat. 3)",
+        "1203": "BENZIN (Kat. 2)",
+        "1965": "FLÜSSIGGAS (Kat. 2)",
+        "1978": "PROPAN (Kat. 2)",
+        "1075": "PETROLEUMGASE (Kat. 2)",
+        "1223": "KEROSIN (Kat. 3)",
+        
+        // Säuren / Chemie
+        "1830": "SCHWEFELSÄURE (Kat. 2)",
+        "1789": "SALZSÄURE (Kat. 2)",
+        "1823": "ÄTZNATRON (Kat. 2)",
+        "2031": "SALPETERSÄURE (Kat. 2)",
+        
+        // Sonstige
+        "1263": "FARBE / LACK (Kat. 2 oder 3)",
+        "3082": "UMWELTGEFÄHRDEND, FLÜSSIG (Kat. 3)",
+        "3077": "UMWELTGEFÄHRDEND, FEST (Kat. 3)",
+        "3291": "KLINISCHER ABFALL (Kat. 2)",
+        "1950": "SPRAYDOSEN / AEROSOLE (Kat. 2)"
     };
-
-    // Länderliste initialisieren
-    const cList = document.getElementById('countryList');
-    for (let c in countries) {
-        let o1 = document.createElement('option'); o1.value = c; cList.appendChild(o1);
-        let o2 = document.createElement('option'); o2.value = countries[c]; cList.appendChild(o2);
-    }
 
     function checkPlate() {
         const val = document.getElementById('plateInput').value.trim().toUpperCase();
@@ -113,32 +122,33 @@
     }
 
     function calcAll() {
-        // UN Info
         const unVal = document.getElementById('unInput').value;
         const unBox = document.getElementById('unInfoBox');
-        if (unData[unVal]) unBox.innerText = unData[unVal];
-        else if (unVal.length === 4) unBox.innerText = "UN-Nummer " + unVal;
+        const dNr = document.getElementById('dangerNr').value.toUpperCase();
+        
+        // UN Info Anzeige
+        let info = "";
+        if (dNr.includes("X")) info = "⚠️ REAGIERT MIT WASSER! ";
+        if (unDatabase[unVal]) info += unDatabase[unVal];
+        else if (unVal.length === 4) info += "UN " + unVal + " (Spezialstoff)";
+        else info = "Stoff eingeben...";
+        unBox.innerText = info;
 
-        // Punkte Berechnung
+        // Punkte Logik
         const kat = parseFloat(document.getElementById('befKat').value);
         const menge = parseFloat(document.getElementById('quantity').value) || 0;
         const total = kat * menge;
-        
         document.getElementById('totalPoints').innerText = total;
 
         const status = document.getElementById('tunnelStatus');
-        
-        if (total > 1000) {
+        if (total >= 1000) {
             status.innerText = "GOTTHARD VERBOTEN (Kat. E)";
             status.className = "status-pill forbidden";
-        } else if (total === 0 && menge > 0 && kat === 0) {
-             status.innerText = "FREIE FAHRT (Kat. 4)";
-             status.className = "status-pill allowed";
-        } else if (menge === 0) {
-            status.innerText = "BEREIT FÜR EINGABE";
+        } else if (menge > 0) {
+            status.innerText = "FREIE FAHRT (Keine Tafeln nötig)";
             status.className = "status-pill allowed";
         } else {
-            status.innerText = "FREIE FAHRT (Unter 1000 Pkt.)";
+            status.innerText = "BEREIT FÜR EINGABE";
             status.className = "status-pill allowed";
         }
     }
