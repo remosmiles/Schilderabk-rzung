@@ -3,122 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Länderkennzeichen-Checker | Schwerverkehr</title>
+    <title>SVZ Profi-Check | Kennzeichen & ADR</title>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --bg: #ecf0f1;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-        h1 { color: var(--primary); text-align: center; font-size: 1.4rem; margin-bottom: 25px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+        :root { --primary: #2c3e50; --accent: #e67e22; --bg: #f4f7f6; --danger: #c0392b; --success: #27ae60; --blue: #2980b9; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 10px; }
+        .container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 100%; max-width: 650px; }
+        h1 { color: var(--primary); text-align: center; font-size: 1.3rem; border-bottom: 3px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
+        h2 { font-size: 0.9rem; color: #7f8c8d; margin-top: 0; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input, select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        .display { margin-top: 10px; padding: 15px; border-radius: 8px; text-align: center; min-height: 50px; background: #f9f9f9; }
         
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--primary); }
-        
-        input { 
-            width: 100%; 
-            padding: 15px; 
-            border: 2px solid #ddd; 
-            border-radius: 8px; 
-            font-size: 1.1rem; 
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-        input:focus { border-color: var(--accent); outline: none; }
-
-        .result-box { 
-            background: var(--primary); 
-            color: white; 
-            padding: 25px; 
-            border-radius: 10px; 
-            text-align: center; 
-            margin-top: 20px;
-        }
-        #mainResult { font-size: 3.5rem; font-weight: 900; letter-spacing: 2px; margin: 0; }
-        #subResult { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
-        
-        .help-text { font-size: 0.85rem; color: #7f8c8d; text-align: center; margin-top: 15px; }
+        /* Punkte-Rechner */
+        .points-box { background: var(--primary); color: white; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: center; }
+        .status-pill { display: inline-block; padding: 8px 15px; border-radius: 50px; font-weight: bold; margin-top: 10px; font-size: 1.1rem; }
+        .forbidden { background: #fdeaea; color: var(--danger); border: 2px solid var(--danger); }
+        .allowed { background: #eafaf1; color: var(--success); border: 2px solid var(--success); }
+        .points-val { font-size: 2rem; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🚛 Kennzeichen-Finder</h1>
-    
-    <div class="input-group">
-        <label for="searchInput">Suche nach Land oder Kürzel:</label>
-        <input type="text" id="searchInput" list="allData" placeholder="z.B. 'Polen' oder 'PL'..." oninput="search()">
+    <h1>🚛 SVZ Kontroll-Terminal</h1>
+
+    <div class="section">
+        <h2>🌍 Kennzeichen-Suche</h2>
+        <input type="text" id="plateInput" list="countryList" placeholder="Land oder Kürzel (z.B. CH oder Polen)..." oninput="checkPlate()">
+        <datalist id="countryList"></datalist>
+        <div class="display">
+            <strong id="plateResult" style="font-size: 1.5rem;">--</strong> <span id="plateName"></span>
+        </div>
     </div>
 
-    <datalist id="allData">
-        </datalist>
-
-    <div class="result-box">
-        <p id="mainResult">--</p>
-        <p id="subResult">Bereit für Eingabe</p>
+    <div class="section">
+        <h2>🔥 ADR Gefahrgut-Info</h2>
+        <div class="grid">
+            <input type="number" id="unInput" placeholder="UN-Nr (4 Stellen)" oninput="calcAll()">
+            <input type="number" id="dangerNr" placeholder="Gefahrenzahl (oben)" oninput="calcAll()">
+        </div>
+        <div id="unInfoBox" class="display" style="font-weight: bold; color: var(--blue);">Stoff eingeben...</div>
     </div>
 
-    <p class="help-text">Ideal für die Kontrolle im Schwerverkehrszentrum.<br>Tippe das Land oder das Kennzeichenkürzel ein.</p>
+    <div class="section" style="border-left: 5px solid var(--accent);">
+        <h2>⚖️ 1000-Punkte-Rechner (ADR 1.1.3.6)</h2>
+        <div class="grid">
+            <div>
+                <label style="font-size: 0.8rem;">Beförderungskat.</label>
+                <select id="befKat" onchange="calcAll()">
+                    <option value="50">Kat. 1 (Faktor 50)</option>
+                    <option value="3">Kat. 2 (Faktor 3)</option>
+                    <option value="1" selected>Kat. 3 (Faktor 1)</option>
+                    <option value="0">Kat. 4 (Faktor 0 - unbegrenzt)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem;">Menge (kg / Liter)</label>
+                <input type="number" id="quantity" placeholder="Menge" oninput="calcAll()">
+            </div>
+        </div>
+
+        <div class="points-box">
+            <span>Gesamt-Punkte:</span>
+            <span class="points-val" id="totalPoints">0</span>
+            <div id="tunnelStatus" class="status-pill allowed">FREIE FAHRT (Tunnel E)</div>
+        </div>
+    </div>
+
+    <p style="font-size: 0.7rem; color: #999; text-align: center;">
+        * Tunnel Kat. E (Gotthard): Kennzeichnungspflichtige Transporte verboten.<br>
+        * Unter 1000 Punkten: Keine orangefarbene Tafel nötig = ERLAUBT.
+    </p>
 </div>
 
 <script>
-    // Umfassende Datenbank für den Fernverkehr
     const countries = {
         "Deutschland": "D", "Österreich": "A", "Schweiz": "CH", "Italien": "I", "Frankreich": "F",
-        "Spanien": "E", "Portugal": "P", "Niederlande": "NL", "Belgien": "B", "Luxemburg": "L",
-        "Polen": "PL", "Tschechien": "CZ", "Slowakei": "SK", "Ungarn": "H", "Slowenien": "SLO",
-        "Kroatien": "HR", "Serbien": "SRB", "Bosnien und Herzegowina": "BIH", "Montenegro": "MNE",
-        "Nordmazedonien": "NMK", "Albanien": "AL", "Griechenland": "GR", "Bulgarien": "BG",
-        "Rumänien": "RO", "Moldau": "MD", "Ukraine": "UA", "Belarus": "BY", "Russland": "RUS",
-        "Großbritannien": "UK", "Irland": "IRL", "Dänemark": "DK", "Schweden": "S", "Norwegen": "N",
-        "Finnland": "FIN", "Estland": "EST", "Lettland": "LV", "Litauen": "LT", "Türkei": "TR",
-        "Georgien": "GE", "Armenien": "AM", "Aserbaidschan": "AZ", "Kasachstan": "KZ", "Malta": "M",
-        "Zypern": "CY", "Liechtenstein": "FL", "Andorra": "AND", "San Marino": "RSM", "Monaco": "MC",
-        "Island": "IS", "Kosovo": "RKS", "Vatikan": "V"
+        "Spanien": "E", "Polen": "PL", "Tschechien": "CZ", "Niederlande": "NL", "Belgien": "B",
+        "Ungarn": "H", "Rumänien": "RO", "Slowakei": "SK", "Türkei": "TR", "Ukraine": "UA"
     };
 
-    // Hilfsliste für die automatische Vervollständigung füllen
-    const datalist = document.getElementById('allData');
-    for (let country in countries) {
-        let option = document.createElement('option');
-        option.value = country;
-        datalist.appendChild(option);
-        
-        let optionCode = document.createElement('option');
-        optionCode.value = countries[country];
-        datalist.appendChild(optionCode);
+    const unData = {
+        "1202": "DIESELKRAFTSTOFF / HEIZÖL",
+        "1203": "BENZIN",
+        "1965": "FLÜSSIGGAS",
+        "1263": "FARBE / LACK",
+        "3082": "Umweltgefährdend (flüssig)",
+        "3077": "Umweltgefährdend (fest)"
+    };
+
+    // Länderliste initialisieren
+    const cList = document.getElementById('countryList');
+    for (let c in countries) {
+        let o1 = document.createElement('option'); o1.value = c; cList.appendChild(o1);
+        let o2 = document.createElement('option'); o2.value = countries[c]; cList.appendChild(o2);
     }
 
-    function search() {
-        const val = document.getElementById('searchInput').value.trim().toUpperCase();
-        const main = document.getElementById('mainResult');
-        const sub = document.getElementById('subResult');
-
-        // Suche nach Land (Key)
-        const countryKey = Object.keys(countries).find(k => k.toUpperCase() === val);
-        
-        // Suche nach Kürzel (Value)
+    function checkPlate() {
+        const val = document.getElementById('plateInput').value.trim().toUpperCase();
+        const res = document.getElementById('plateResult');
+        const name = document.getElementById('plateName');
         const codeKey = Object.keys(countries).find(k => countries[k] === val);
+        const countryKey = Object.keys(countries).find(k => k.toUpperCase() === val);
 
-        if (countryKey) {
-            main.innerText = countries[countryKey];
-            sub.innerText = countryKey;
-        } else if (codeKey) {
-            main.innerText = val;
-            sub.innerText = codeKey;
-        } else {
-            main.innerText = "--";
-            sub.innerText = "Nicht gefunden";
-        }
+        if (codeKey) { res.innerText = val; name.innerText = "("+codeKey+")"; }
+        else if (countryKey) { res.innerText = countries[countryKey]; name.innerText = "("+countryKey+")"; }
+        else { res.innerText = "--"; name.innerText = ""; }
+    }
+
+    function calcAll() {
+        // UN Info
+        const unVal = document.getElementById('unInput').value;
+        const unBox = document.getElementById('unInfoBox');
+        if (unData[unVal]) unBox.innerText = unData[unVal];
+        else if (unVal.length === 4) unBox.innerText = "UN-Nummer " + unVal;
+
+        // Punkte Berechnung
+        const kat = parseFloat(document.getElementById('befKat').value);
+        const menge = parseFloat(document.getElementById('quantity').value) || 0;
+        const total = kat * menge;
         
-        if (val === "") {
-            main.innerText = "--";
-            sub.innerText = "Bereit für Eingabe";
+        document.getElementById('totalPoints').innerText = total;
+
+        const status = document.getElementById('tunnelStatus');
+        
+        if (total > 1000) {
+            status.innerText = "GOTTHARD VERBOTEN (Kat. E)";
+            status.className = "status-pill forbidden";
+        } else if (total === 0 && menge > 0 && kat === 0) {
+             status.innerText = "FREIE FAHRT (Kat. 4)";
+             status.className = "status-pill allowed";
+        } else if (menge === 0) {
+            status.innerText = "BEREIT FÜR EINGABE";
+            status.className = "status-pill allowed";
+        } else {
+            status.innerText = "FREIE FAHRT (Unter 1000 Pkt.)";
+            status.className = "status-pill allowed";
         }
     }
 </script>
-
 </body>
 </html>
