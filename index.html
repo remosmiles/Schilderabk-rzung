@@ -3,70 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Länderkennzeichen Suche</title>
+    <title>Länderkennzeichen-Checker | Schwerverkehr</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding: 50px; background-color: #f4f4f9; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h1 { font-size: 1.5rem; color: #333; margin-bottom: 1rem; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        #result { font-size: 3rem; font-weight: bold; color: #0056b3; text-align: center; margin-top: 20px; min-height: 70px; }
-        .info { text-align: center; color: #666; font-size: 0.9rem; }
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #ecf0f1;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h1 { color: var(--primary); text-align: center; font-size: 1.4rem; margin-bottom: 25px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+        
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--primary); }
+        
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1.1rem; 
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; }
+
+        .result-box { 
+            background: var(--primary); 
+            color: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            text-align: center; 
+            margin-top: 20px;
+        }
+        #mainResult { font-size: 3.5rem; font-weight: 900; letter-spacing: 2px; margin: 0; }
+        #subResult { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
+        
+        .help-text { font-size: 0.85rem; color: #7f8c8d; text-align: center; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1>🌍 KFZ-Kennzeichen Suche</h1>
-    <input list="countries" id="countryInput" placeholder="Land eingeben oder wählen..." oninput="showCode()">
+<div class="container">
+    <h1>🚛 Kennzeichen-Finder</h1>
     
-    <datalist id="countries">
-        <option value="Deutschland">
-        <option value="Österreich">
-        <option value="Schweiz">
-        <option value="Italien">
-        <option value="Frankreich">
-        <option value="Spanien">
-        <option value="Niederlande">
-        <option value="Belgien">
-        <option value="Polen">
-        <option value="Tschechien">
-    </datalist>
+    <div class="input-group">
+        <label for="searchInput">Suche nach Land oder Kürzel:</label>
+        <input type="text" id="searchInput" list="allData" placeholder="z.B. 'Polen' oder 'PL'..." oninput="search()">
+    </div>
 
-    <div id="result">--</div>
-    <p class="info" id="countryName">Wähle ein Land aus</p>
+    <datalist id="allData">
+        </datalist>
+
+    <div class="result-box">
+        <p id="mainResult">--</p>
+        <p id="subResult">Bereit für Eingabe</p>
+    </div>
+
+    <p class="help-text">Ideal für die Kontrolle im Schwerverkehrszentrum.<br>Tippe das Land oder das Kennzeichenkürzel ein.</p>
 </div>
 
 <script>
-    // Liste der Länder und Kürzel
-    const database = {
-        "Deutschland": "D",
-        "Österreich": "A",
-        "Schweiz": "CH",
-        "Italien": "I",
-        "Frankreich": "F",
-        "Spanien": "E",
-        "Niederlande": "NL",
-        "Belgien": "B",
-        "Polen": "PL",
-        "Tschechien": "CZ",
-        "Luxemburg": "L",
-        "Liechtenstein": "FL",
-        "Dänemark": "DK",
-        "Schweden": "S",
-        "Norwegen": "N"
+    // Umfassende Datenbank für den Fernverkehr
+    const countries = {
+        "Deutschland": "D", "Österreich": "A", "Schweiz": "CH", "Italien": "I", "Frankreich": "F",
+        "Spanien": "E", "Portugal": "P", "Niederlande": "NL", "Belgien": "B", "Luxemburg": "L",
+        "Polen": "PL", "Tschechien": "CZ", "Slowakei": "SK", "Ungarn": "H", "Slowenien": "SLO",
+        "Kroatien": "HR", "Serbien": "SRB", "Bosnien und Herzegowina": "BIH", "Montenegro": "MNE",
+        "Nordmazedonien": "NMK", "Albanien": "AL", "Griechenland": "GR", "Bulgarien": "BG",
+        "Rumänien": "RO", "Moldau": "MD", "Ukraine": "UA", "Belarus": "BY", "Russland": "RUS",
+        "Großbritannien": "UK", "Irland": "IRL", "Dänemark": "DK", "Schweden": "S", "Norwegen": "N",
+        "Finnland": "FIN", "Estland": "EST", "Lettland": "LV", "Litauen": "LT", "Türkei": "TR",
+        "Georgien": "GE", "Armenien": "AM", "Aserbaidschan": "AZ", "Kasachstan": "KZ", "Malta": "M",
+        "Zypern": "CY", "Liechtenstein": "FL", "Andorra": "AND", "San Marino": "RSM", "Monaco": "MC",
+        "Island": "IS", "Kosovo": "RKS", "Vatikan": "V"
     };
 
-    function showCode() {
-        const input = document.getElementById('countryInput').value;
-        const resultDiv = document.getElementById('result');
-        const infoDiv = document.getElementById('countryName');
+    // Hilfsliste für die automatische Vervollständigung füllen
+    const datalist = document.getElementById('allData');
+    for (let country in countries) {
+        let option = document.createElement('option');
+        option.value = country;
+        datalist.appendChild(option);
+        
+        let optionCode = document.createElement('option');
+        optionCode.value = countries[country];
+        datalist.appendChild(optionCode);
+    }
 
-        if (database[input]) {
-            resultDiv.innerText = database[input];
-            infoDiv.innerText = "Internationales Kürzel für " + input;
+    function search() {
+        const val = document.getElementById('searchInput').value.trim().toUpperCase();
+        const main = document.getElementById('mainResult');
+        const sub = document.getElementById('subResult');
+
+        // Suche nach Land (Key)
+        const countryKey = Object.keys(countries).find(k => k.toUpperCase() === val);
+        
+        // Suche nach Kürzel (Value)
+        const codeKey = Object.keys(countries).find(k => countries[k] === val);
+
+        if (countryKey) {
+            main.innerText = countries[countryKey];
+            sub.innerText = countryKey;
+        } else if (codeKey) {
+            main.innerText = val;
+            sub.innerText = codeKey;
         } else {
-            resultDiv.innerText = "--";
-            infoDiv.innerText = "Land nicht gefunden";
+            main.innerText = "--";
+            sub.innerText = "Nicht gefunden";
+        }
+        
+        if (val === "") {
+            main.innerText = "--";
+            sub.innerText = "Bereit für Eingabe";
         }
     }
 </script>
